@@ -1,0 +1,1 @@
+ALTER TABLE "public"."Entry" ADD UNIQUE (athlete, competition, discipline, ageGroup);
