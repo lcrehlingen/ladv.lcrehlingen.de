@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-node@v3
       - name: Install dependencies
         working-directory: ./backend
-        run: npm install
+        run: npm install prisma
       - name: Apply all pending migrations to the database
         working-directory: ./backend
         run: npx prisma migrate deploy
