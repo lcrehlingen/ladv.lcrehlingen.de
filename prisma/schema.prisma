@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model AgeGroup {
+  id                    Int                     @id(map: "AgeGroup_pkey1") @default(autoincrement())
+  code                  String                  @unique
+  name                  String
+  official              Boolean
+  shortName             String?
+  CompetitionDiscipline CompetitionDiscipline[]
+  Entry                 Entry[]
+}
+
+model Athlete {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  firstname  String
+  lastname   String
+  birthyear  Int
+  Entry      Entry[]
+
+  @@unique([firstname, lastname, birthyear])
+}
+
+model Competition {
+  id                                               Int                     @id @default(autoincrement())
+  created_at                                       DateTime                @default(now()) @db.Timestamptz(6)
+  name                                             String
+  venue                                            String
+  date                                             DateTime                @db.Date
+  canceled                                         Boolean
+  email                                            String
+  location                                         Int
+  entryDeadline                                    DateTime                @db.Date
+  lv                                               Int?
+  host                                             Int
+  organizer                                        Int
+  Organisation_Competition_hostToOrganisation      Organisation            @relation("Competition_hostToOrganisation", fields: [host], references: [id], onDelete: Cascade)
+  Location                                         Location                @relation(fields: [location], references: [id], onDelete: Cascade)
+  Federation                                       Federation?             @relation(fields: [lv], references: [id], onDelete: Cascade)
+  Organisation_Competition_organizerToOrganisation Organisation            @relation("Competition_organizerToOrganisation", fields: [organizer], references: [id], onDelete: Cascade)
+  CompetitionDiscipline                            CompetitionDiscipline[]
+  Entry                                            Entry[]
+}
+
+model CompetitionDiscipline {
+  competition Int
+  discipline  Int
+  ageGroup    Int
+  AgeGroup    AgeGroup    @relation(fields: [ageGroup], references: [id], onDelete: Cascade)
+  Discipline  Discipline  @relation(fields: [discipline], references: [id], onDelete: Cascade)
+  Competition Competition @relation(fields: [competition], references: [id], onDelete: Cascade, map: "Discipline_competition_fkey")
+
+  @@unique([discipline, competition, ageGroup])
+}
+
+model Country {
+  id       Int        @id @default(autoincrement())
+  code     String     @unique
+  name     String     @unique
+  Location Location[]
+}
+
+model Discipline {
+  id                    Int                     @id(map: "AgeGroup_pkey") @default(autoincrement())
+  code                  String                  @unique
+  name                  String
+  official              Boolean
+  CompetitionDiscipline CompetitionDiscipline[]
+  Entry                 Entry[]
+}
+
+model Entry {
+  id          Int         @id @default(autoincrement())
+  athlete     Int
+  competition Int
+  ageGroup    Int
+  discipline  Int
+  AgeGroup    AgeGroup    @relation(fields: [ageGroup], references: [id], onDelete: Cascade)
+  Athlete     Athlete     @relation(fields: [athlete], references: [id], onDelete: Cascade)
+  Competition Competition @relation(fields: [competition], references: [id], onDelete: Cascade)
+  Discipline  Discipline  @relation(fields: [discipline], references: [id], onDelete: Cascade)
+}
+
+model Federation {
+  id          Int           @id @default(autoincrement())
+  code        String
+  name        String
+  Competition Competition[]
+  Location    Location[]
+}
+
+model Location {
+  id          Int           @id @default(autoincrement())
+  name        String
+  lv          Int?
+  country     Int
+  long        Decimal
+  lat         Decimal
+  Competition Competition[]
+  Country     Country       @relation(fields: [country], references: [id], onDelete: Cascade)
+  Federation  Federation?   @relation(fields: [lv], references: [id], onDelete: Cascade)
+}
+
+model Organisation {
+  id                                              Int           @id @default(autoincrement())
+  name                                            String        @unique
+  Competition_Competition_hostToOrganisation      Competition[] @relation("Competition_hostToOrganisation")
+  Competition_Competition_organizerToOrganisation Competition[] @relation("Competition_organizerToOrganisation")
+}
